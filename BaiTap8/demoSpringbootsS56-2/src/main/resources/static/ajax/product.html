@@ -11,56 +11,122 @@
 </head>
 <body class="container mt-4">
 
-	<h3>Category CRUD with AJAX - Duy Shop</h3>
+	<h3>Product CRUD with AJAX - Duy Shop</h3>
 
 	<!-- Form Thêm Mới -->
-	<form id="addCategoryForm" enctype="multipart/form-data">
+	<form id="addProductForm" enctype="multipart/form-data">
 		<div class="mb-3">
-			<label>Name</label> <input type="text" id="categoryName"
+			<label>Product Name</label> <input type="text" id="productName"
+				class="form-control" required>
+		</div>
+
+		<div class="mb-3">
+			<label>Category Name</label> <select class="form-control"
+				id="categorySelect" name="categoryId" required>
+				<option value="">--- Select Category Name ---</option>
+			</select>
+		</div>
+
+		<div class="mb-3">
+			<label>Created Date</label> <input type="date" id="createdDate"
+				class="form-control">
+		</div>
+		<div class="mb-3">
+			<label>Description</label> <input type="text" id="description"
 				class="form-control" required>
 		</div>
 		<div class="mb-3">
-			<label>Icon</label> <input type="file" id="icon" class="form-control">
+			<label>Discount</label> <input type="text" id="discount"
+				class="form-control" placeholder="Enter float" required>
+		</div>
+
+		<div class="mb-3">
+			<label>Quantity</label> <input type="text" id="quantity"
+				class="form-control" placeholder="Enter integer" required>
+		</div>
+
+		<div class="mb-3">
+			<label>Status</label> <input type="text" id="status"
+				class="form-control" placeholder="Enter integer" required>
+		</div>
+		<div class="mb-3">
+			<label>Unit Price</label> <input type="text" id="unitPrice"
+				class="form-control" placeholder="Enter float" required>
+		</div>
+		<div class="mb-3">
+			<label>Images</label> <input type="file" id="images"
+				class="form-control">
 			<div id="preview" class="mt-2"></div>
 		</div>
-		<button type="submit" class="btn btn-primary">Add Category</button>
+		<button type="submit" class="btn btn-primary">Add Product</button>
 	</form>
 
 	<hr>
 
 	<!-- Bảng hiển thị -->
-	<table class="table table-bordered" id="categoryTable">
+	<table class="table table-bordered" id="productTable">
 		<thead>
 			<tr>
 				<th>ID</th>
-				<th>Name</th>
-				<th>Icon</th>
-				<th>Actions</th>
+				<th>Product Name</th>
+				<th>Created Date</th>
+				<th>Description</th>
+				<th>Discount</th>
+				<th>Quantity</th>
+				<th>Status</th>
+				<th>Unit Price</th>
+				<th>Images</th>
 			</tr>
 		</thead>
 		<tbody></tbody>
 	</table>
 
 	<!-- Modal Edit Category -->
-	<div class="modal fade" id="editCategoryModal" tabindex="-1"
+	<div class="modal fade" id="editProductModal" tabindex="-1"
 		aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form id="editCategoryForm" enctype="multipart/form-data">
+				<form id="editProductForm" enctype="multipart/form-data">
 					<div class="modal-header">
 						<h5 class="modal-title">Edit Category</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 					</div>
 					<div class="modal-body">
-						<input type="hidden" id="editCategoryId"> <input
-							type="hidden" id="editOldIcon">
+						<input type="hidden" id="editProductId"> <input
+							type="hidden" id="editOldImages">
 
 						<div class="mb-3">
-							<label>Name</label> <input type="text" id="editCategoryName"
-								class="form-control" required>
+							<label>Product Name</label> <input type="text"
+								id="editProductName" class="form-control" required>
 						</div>
 						<div class="mb-3">
-							<label>Icon</label> <input type="file" id="editIcon"
+							<label>Category Name</label> <select class="form-control"
+								id="editCategorySelect" name="categoryId" required>
+								<option value=""></option>
+							</select>
+						</div>
+						<div class="mb-3">
+							<label>Description</label> <input type="text"
+								id="editDescription" class="form-control" required>
+						</div>
+						<div class="mb-3">
+							<label>Discount</label> <input type="text" id="editDiscount"
+								class="form-control" placeholder="Enter float" required>
+						</div>
+						<div class="mb-3">
+							<label>Quantity</label> <input type="text" id="editQuantity"
+								class="form-control" placeholder="Enter integer" required>
+						</div>
+						<div class="mb-3">
+							<label>Status</label> <input type="text" id="editStatus"
+								class="form-control" placeholder="Enter integer" required>
+						</div>
+						<div class="mb-3">
+							<label>Unit Price</label> <input type="text" id="editUnitPrice"
+								class="form-control" placeholder="Enter float" required>
+						</div>
+						<div class="mb-3">
+							<label>Images</label> <input type="file" id="editImages"
 								class="form-control">
 							<div id="editPreview" class="mt-2"></div>
 						</div>
@@ -76,51 +142,92 @@
 		</div>
 	</div>
 
-	<script>
-const apiUrl = "http://localhost:8088/api/category";
+	<!-- jQuery CDN -->
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-// Load tất cả Category
-function loadCategories() {
-  $.get(apiUrl, function(res) {
+	<script>
+	
+	const apiUrlCategory = "http://localhost:8088/api/category";
+	const apiUrlProduct = "http://localhost:8088/api/product";
+
+	let categoryList = []; // biến global lưu danh sách category
+
+	// Load category cho cả form thêm và form sửa
+	$(document).ready(function() {
+	    $.ajax({
+	        url: apiUrlCategory,
+	        method: "GET",
+	        dataType: "json",
+	        success: function(res) {
+	            if(res.status) {
+	                categoryList = res.body; // lưu danh sách category
+	                const $select = $("#categorySelect"); // form thêm
+	                categoryList.forEach(function(c) {
+	                    $select.append($("<option></option>").val(c.categoryId).text(c.name));
+	                });
+	            }
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("Lỗi tải danh mục loại sản phẩm:", error);
+	        }
+	    });
+	});
+
+// Load tất cả Product
+function loadProducts() {
+  $.get(apiUrlProduct, function(res) {
     let rows = "";
-    res.body.forEach(cat => {
+    res.body.forEach(pro => {
       rows += `
         <tr>
-          <td>${cat.categoryId}</td>
-          <td>${cat.name}</td>
-          <td>${cat.icon ? `<img src="/uploads/${cat.icon}" width="50">` : ""}</td>
+    	  <td>${pro.productId}</td>
+    	  <td>${pro.name}</td>
+    	  <td>${pro.createdDate || ''}</td>
+    	  <td>${pro.description || ''}</td>
+    	  <td>${pro.discount || ''}</td>
+    	  <td>${pro.quantity || ''}</td>
+    	  <td>${pro.status || ''}</td>
+    	  <td>${pro.unitPrice || ''}</td>
+    	  <td>${pro.images ? `<img src="/uploads/${pro.images}" width="50">` : ''}</td>
           <td>
-            <button class="btn btn-sm btn-warning" onclick="editCategory(${cat.categoryId})">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteCategory(${cat.categoryId})">Delete</button>
+            <button class="btn btn-sm btn-warning" onclick="editProduct(${pro.productId})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${pro.productId})">Delete</button>
           </td>
         </tr>
       `;
     });
-    $("#categoryTable tbody").html(rows);
+    $("#productTable tbody").html(rows);
   });
 }
 
-// Thêm mới Category
-$("#addCategoryForm").submit(function(e) {
+// Thêm mới Product
+$("#addProductForm").submit(function(e) {
   e.preventDefault();
-  if ($("#icon")[0].files.length === 0) {
+  if ($("#images")[0].files.length === 0) {
     alert("Bạn phải chọn ảnh khi thêm mới!");
     return;
   }
   let formData = new FormData();
-  formData.append("categoryName", $("#categoryName").val());
-  formData.append("icon", $("#icon")[0].files[0]);
+  formData.append("productName", $("#productName").val());
+  formData.append("categoryId", $("#categorySelect").val());
+  formData.append("createdDate", $("#createdDate").val());
+  formData.append("description", $("#description").val());
+  formData.append("discount", $("#discount").val());
+  formData.append("quantity", $("#quantity").val());
+  formData.append("status", $("#status").val());
+  formData.append("unitPrice", $("#unitPrice").val());
+  formData.append("images", $("#images")[0].files[0]);
 
   $.ajax({
-    url: apiUrl + "/addCategory",
+    url: apiUrlProduct + "/addProduct",
     type: "POST",
     data: formData,
     processData: false,
     contentType: false,
     success: function(res) {
       alert(res.message);
-      loadCategories();
-      $("#addCategoryForm")[0].reset();
+      loadProducts();
+      $("#addProductForm")[0].reset();
       $("#preview").html("");
     },
     error: function(err) {
@@ -129,47 +236,74 @@ $("#addCategoryForm").submit(function(e) {
   });
 });
 
-// Mở modal edit
-function editCategory(id) {
-  $.get(apiUrl + "/getCategory", { id: id }, function(res) {
-    let cat = res.body;
-    $("#editCategoryId").val(cat.categoryId);
-    $("#editCategoryName").val(cat.name);
-    $("#editOldIcon").val(cat.icon || "");
-    $("#editPreview").html(cat.icon ? `<img src="/uploads/${cat.icon}" width="80">` : "");
-    var modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+//Mở modal edit
+function editProduct(id) {
+  $.get(apiUrlProduct + "/getProduct", { id: id }, function(res) {
+    let pro = res.body;
+    $("#editProductId").val(pro.productId);
+    $("#editProductName").val(pro.name);
+    $("#editDescription").val(pro.description);
+    $("#editDiscount").val(pro.discount);
+    $("#editQuantity").val(pro.quantity);
+    $("#editStatus").val(pro.status);
+    $("#editUnitPrice").val(pro.unitPrice);
+    $("#editOldImages").val(pro.images || "");
+    $("#editPreview").html(pro.images ? `<img src="/uploads/${pro.images}" width="80">` : "");
+    
+    // Load select category cho form sửa
+    const $editSelect = $("#editCategorySelect");
+    $editSelect.empty();
+    categoryList.forEach(function(c) {
+        const $option = $("<option></option>").val(c.categoryId).text(c.name);
+        if(pro.category && pro.category.categoryId === c.categoryId) {
+            $option.prop("selected", true); // chọn giá trị hiện tại
+        }
+        $editSelect.append($option);
+    });
+
+    var modal = new bootstrap.Modal(document.getElementById('editProductModal'));
     modal.show();
   });
 }
 
 // Submit form Edit
-$("#editCategoryForm").submit(function(e) {
+$("#editProductForm").submit(function(e) {
   e.preventDefault();
-  let id = $("#editCategoryId").val();
+  let id = $("#editProductId").val();
   let formData = new FormData();
-  formData.append("categoryName", $("#editCategoryName").val());
-  formData.append("categoryId", id);
+  formData.append("productId", id);
+  formData.append("productName", $("#editProductName").val());
+  formData.append("description", $("#editDescription").val());
+  formData.append("discount", $("#editDiscount").val());
+  formData.append("quantity", $("#editQuantity").val());
+  formData.append("status", $("#editStatus").val());
+  formData.append("unitPrice", $("#editUnitPrice").val());
+  formData.append("categoryId", $("#editCategorySelect").val());
 
-  if ($("#editIcon")[0].files.length > 0) {
-    formData.append("icon", $("#editIcon")[0].files[0]);
+  if ($("#editImages")[0].files.length > 0) {
+    formData.append("images", $("#editImages")[0].files[0]);
   } else {
-    let oldIcon = $("#editOldIcon").val();
-    formData.append("icon", new Blob(), oldIcon);
-    formData.append("oldIcon", oldIcon);
+    let oldImages = $("#editOldImages").val();
+    formData.append("images", new Blob(), oldImages);
+    formData.append("oldImages", oldImages);
   }
 
   $.ajax({
-    url: apiUrl + "/updateCategory",
+    url: apiUrlProduct + "/updateProduct",
     type: "PUT",
     data: formData,
     processData: false,
     contentType: false,
     success: function(res) {
       alert(res.message);
-      loadCategories();
-      $("#editCategoryForm")[0].reset();
+      loadProducts();
+      $("#editProductForm")[0].reset();
       $("#editPreview").html("");
-      bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+      
+   // Đóng modal edit
+      const modalEl = document.getElementById('editProductModal');
+      const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modal.hide();
     },
     error: function(err) {
       alert("Update failed");
@@ -177,16 +311,16 @@ $("#editCategoryForm").submit(function(e) {
   });
 });
 
-// Xóa Category
-function deleteCategory(id) {
+// Xóa Product
+function deleteProduct(id) {
   if (confirm("Are you sure?")) {
     $.ajax({
-      url: apiUrl + "/deleteCategory",
+      url: apiUrlProduct + "/deleteProduct",
       type: "DELETE",
-      data: { categoryId: id },
+      data: { productId: id },
       success: function(res) {
         alert(res.message);
-        loadCategories();
+        loadProducts();
       },
       error: function(err) {
         alert("Delete failed");
@@ -195,8 +329,8 @@ function deleteCategory(id) {
   }
 }
 
-// Preview icon thêm mới
-$("#icon").change(function() {
+// Preview images thêm mới
+$("#images").change(function() {
   let file = this.files[0];
   if (file) {
     $("#preview").html(`<img src="${URL.createObjectURL(file)}" width="80">`);
@@ -205,8 +339,8 @@ $("#icon").change(function() {
   }
 });
 
-// Preview icon edit
-$("#editIcon").change(function() {
+// Preview images edit
+$("#editImages").change(function() {
   let file = this.files[0];
   if (file) {
     $("#editPreview").html(`<img src="${URL.createObjectURL(file)}" width="80">`);
@@ -216,7 +350,7 @@ $("#editIcon").change(function() {
 });
 
 // Load page
-loadCategories();
+loadProducts();
 </script>
 </body>
 </html>

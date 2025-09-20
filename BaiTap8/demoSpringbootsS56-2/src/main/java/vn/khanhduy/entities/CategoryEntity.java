@@ -3,6 +3,7 @@ package vn.khanhduy.entities;
 import java.io.Serializable;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -38,6 +39,6 @@ public class CategoryEntity implements Serializable {
 	String icon;
 	
 	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-	@JsonManagedReference
+	@JsonIgnore//@JsonManagedReference
 	Set<ProductEntity> products;
 }

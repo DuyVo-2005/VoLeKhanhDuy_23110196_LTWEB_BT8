@@ -6,8 +6,6 @@ import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -39,8 +37,6 @@ public class ProductEntity implements Serializable{
 	
 	@Column(name = "product_name", length = 200, columnDefinition = "nvarchar(200) not null")
 	String name;
-	
-	//
 	@Column(nullable = false)
 	int quantity;
 	@Column(nullable = false)
@@ -57,7 +53,6 @@ public class ProductEntity implements Serializable{
 	@Column(nullable = false)
 	short status;
 	
-	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "categoryId", nullable = false, referencedColumnName = "categoryId")
 	@JsonBackReference
