@@ -107,7 +107,7 @@ public class CategoryAPIController {
 			return null;
 	}
 	
-	@DeleteMapping(path = "deleteCategory")
+	@DeleteMapping(path = "/deleteCategory")
 	public ResponseEntity<?> deleteCategory(@Validated @RequestParam("categoryId") Long categoryId){
 		Optional<CategoryEntity> optCategory = categoryService.findById(categoryId);
 		if(optCategory.isEmpty()) {
