@@ -29,10 +29,10 @@ public class CategoryAPIController {
 
 	@Autowired
 	IStorageService storageService;
-	
+
 	@GetMapping
-	public ResponseEntity<?> getAllCategory(){
-		//return ResponseEntity.ok().body(categoryService.findAll());
+	public ResponseEntity<?> getAllCategory() {
+		// return ResponseEntity.ok().body(categoryService.findAll());
 		return new ResponseEntity<Response>(new Response(true, "Thành công", categoryService.findAll()), HttpStatus.OK);
 	}
 
@@ -82,40 +82,44 @@ public class CategoryAPIController {
 
 	@PutMapping(path = "/updateCategory")
 	public ResponseEntity<?> updateCategory(@Validated @RequestParam("categoryId") Long categoryId,
-			@Validated @RequestParam("categoryName") String categoryName,
-			@Validated @RequestParam("icon") MultipartFile icon) {
-			Optional<CategoryEntity> optCategory = categoryService.findById(categoryId);
-			
-			if(optCategory.isEmpty()) {
-				return new ResponseEntity<Response>(new Response(false, "Không tìm thấy category", null), HttpStatus.BAD_REQUEST);
-			}
-			else if(optCategory.isPresent()) {
-				//kiểm tra tồn tại file, lưu file
-				if(!icon.isEmpty()) {
-					UUID uuid = UUID.randomUUID();
-					String uuString = uuid.toString();
-					//lưu file vào trường Images
-					optCategory.get().setIcon(storageService.getStorageFilename(icon, uuString));
-					storageService.store(icon, optCategory.get().getIcon());
-				}
-				
-				optCategory.get().setName(categoryName);
-				categoryService.save(optCategory.get());
-				//return ResponseEntity.ok().body(category);
-				return new ResponseEntity<Response>(new Response(true, "Cập nhật thành công", optCategory.get()), HttpStatus.OK);
-			}
-			return null;
-	}
-	
-	@DeleteMapping(path = "/deleteCategory")
-	public ResponseEntity<?> deleteCategory(@Validated @RequestParam("categoryId") Long categoryId){
+			@Validated @RequestParam("categoryName") String categoryName, @RequestParam("icon") MultipartFile icon,
+			@RequestParam(value = "oldIcon", required = false) String oldIcon) {
 		Optional<CategoryEntity> optCategory = categoryService.findById(categoryId);
-		if(optCategory.isEmpty()) {
-			return new ResponseEntity<Response>(new Response(false, "Không tìm thấy Category", null), HttpStatus.BAD_REQUEST);
+
+		if (optCategory.isEmpty()) {
+			return new ResponseEntity<Response>(new Response(false, "Không tìm thấy category", null),
+					HttpStatus.BAD_REQUEST);
+		} else if (optCategory.isPresent()) {
+			// kiểm tra tồn tại file, lưu file
+			if (!icon.isEmpty()) {
+				UUID uuid = UUID.randomUUID();
+				String uuString = uuid.toString();
+				// lưu file vào trường Images
+				optCategory.get().setIcon(storageService.getStorageFilename(icon, uuString));
+				storageService.store(icon, optCategory.get().getIcon());
+			} else if (oldIcon != null) {
+				// giữ lại file cũ
+				optCategory.get().setIcon(oldIcon);
+			}
+
+			optCategory.get().setName(categoryName);
+			categoryService.save(optCategory.get());
+			// return ResponseEntity.ok().body(category);
+			return new ResponseEntity<Response>(new Response(true, "Cập nhật thành công", optCategory.get()),
+					HttpStatus.OK);
 		}
-		else if(optCategory.isPresent()) {
+		return null;
+	}
+
+	@DeleteMapping(path = "/deleteCategory")
+	public ResponseEntity<?> deleteCategory(@Validated @RequestParam("categoryId") Long categoryId) {
+		Optional<CategoryEntity> optCategory = categoryService.findById(categoryId);
+		if (optCategory.isEmpty()) {
+			return new ResponseEntity<Response>(new Response(false, "Không tìm thấy Category", null),
+					HttpStatus.BAD_REQUEST);
+		} else if (optCategory.isPresent()) {
 			categoryService.delete(optCategory.get());
-			//return ResponseEntity.ok().body(category);
+			// return ResponseEntity.ok().body(category);
 			return new ResponseEntity<Response>(new Response(true, "Xóa thành công", optCategory.get()), HttpStatus.OK);
 		}
 		return null;
